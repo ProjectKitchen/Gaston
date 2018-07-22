@@ -45,16 +45,6 @@ AudioControlSGTL5000     sgtl5000_1;
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14
 
-// Use these with the Teensy 3.5 & 3.6 SD card
-//#define SDCARD_CS_PIN    BUILTIN_SDCARD
-//#define SDCARD_MOSI_PIN  11  // not actually used
-//#define SDCARD_SCK_PIN   13  // not actually used
-
-// Use these for the SD+Wiz820 or other adaptors
-//#define SDCARD_CS_PIN    4
-//#define SDCARD_MOSI_PIN  11
-//#define SDCARD_SCK_PIN   13
-
 void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
@@ -67,7 +57,7 @@ void setup() {
   // This may wait forever if the SDA & SCL pins lack
   // pullup resistors
   sgtl5000_1.enable();
-  sgtl5000_1.volume(0.4);
+  sgtl5000_1.volume(0.2);
 
   SPI.setMOSI(SDCARD_MOSI_PIN);
   SPI.setSCK(SDCARD_SCK_PIN);
@@ -93,35 +83,41 @@ void playFile(const char *filename)
   delay(5);
 
   // Simply wait for the file to finish playing.
-  while (playWav1.isPlaying()) {
-    // uncomment these lines if you audio shield
-    // has the optional volume pot soldered
-    //float vol = analogRead(15);
-    //vol = vol / 1024;
-    // sgtl5000_1.volume(vol);
-  }
+  //  while (playWav1.isPlaying()) {}
 }
 
+char filename[] = "x.wav";
 
 void loop() {
-   int incomingByte;
- // playFile("1.wav");  // filenames are always uppercase 8.3 format
- if (Serial1.available() > 0) {
-  incomingByte = Serial1.read();
-  Serial1.println(incomingByte, DEC);
-  if (incomingByte=='1'){
- playWav1.play("1.wav");
-  delay(5000);
+  int incomingByte;
+/*
+  playFile("1.wav");  // filenames are always uppercase 8.3 format
+  while (1) {
+    float vol = analogRead(15);
+    vol = vol / 3000;
+    sgtl5000_1.volume(vol);
   }
+*/
 
-  if (incomingByte=='0'){
-  playWav1.stop();
-  }
+  float vol = analogRead(15);
+  vol = vol / 3000;
+  sgtl5000_1.volume(vol);
 
-  if (incomingByte=='1'){
- playWav1.play("2.wav");
-  delay(5000);
+  if (Serial1.available() > 0) {
+    incomingByte = Serial1.read();
+    Serial1.println(incomingByte, DEC);
+
+    if (incomingByte=='0'){
+       playWav1.stop();
+    } 
+    else {
+      filename[0]=incomingByte;
+      if (playWav1.isPlaying()) {
+             playWav1.stop();
+             delay(50);
+      }
+      playWav1.play(filename);
+    }
   }
- }
 }
 
