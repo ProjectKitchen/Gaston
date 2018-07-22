@@ -11,24 +11,29 @@
 
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
+#define WHITE_BUTTON_PRESSED !(PIND & (1<<4))
+#define GREEN_BUTTON_PRESSED !(PINC & (1<<6))
+#define ORDER_TIMEOUT 10
+
+
 volatile uint8_t IR_ON=0;
 volatile uint16_t servocnt=0;
-volatile uint8_t  servopos=35;
+volatile uint8_t  servopos=0;
 
 // ISR for 16-bit-timer1 compare 1A match
 // handles IR- and Servo-PWM
 // TBD: improve: use HW PWMs
 ISR(TIMER1_COMPA_vect) 
 {
-	if (IR_ON) PORTF ^= (1<<5);  // 36kHz IR pulse
+	if (IR_ON) PORTB ^= (1<<1);  // 36kHz IR pulse
 
 	servocnt++;
 	if (servocnt == 1441)  // 20ms interval 
-		if (servopos) PORTF|=(1<<6);
+		if (servopos) PORTF|=(1<<5);
 		
     if (servocnt == 1441+servopos)	
     {
-		if (servopos) PORTF &= ~(1<<6);
+		if (servopos) PORTF &= ~(1<<5);
 		servocnt=servopos;
 	}
 
@@ -47,74 +52,174 @@ void init_timer()
 }
 
 
-
-void take_order(void) {
-
-    while(1){
-
-        if(!(PIND &(1<<0))){ // white button
-            break;  //TBD: drink selection
-        }
-        if (!(PIND&(1<<4))){  // green button
-            turn();
-            break;  // turn and get drink
-        }
-       
-    }
+void blink_eye(uint8_t speed) {
+	int i;
+    // close and open lid
+    for (servopos=100;servopos<150;servopos++)  for (i=0;i<speed;i++) _delay_ms(1);
+    for (servopos=150;servopos>100;servopos--)  for (i=0;i<speed;i++) _delay_ms(1);
+    servopos=0;
+}
+void play_sound(char c)
+{
+	uart_transmit(c);
 }
 
+void stop_sound()
+{
+	play_sound('0');
+}
+
+
+int8_t take_order(void) {
+	int seconds=0,i;
+	uint8_t act_drink=0;
+	uint32_t timer=0;
+
+	set_leds(LEDS_GREEN);
+	    
+    while((timer < ORDER_TIMEOUT*1000) && (!cup_present())) {
+        _delay_ms(20);
+        timer+=20;
+    }
+
+    if (!cup_present()) return(-1);   // order timed out !
+
+    set_leds(LEDS_GREEN|LEDS_RED);     // cup is here - let's go!
+	play_sound('a');          // take order sound
+    _delay_ms(500);
+    set_leds(LEDS_BLUE);
+
+
+	while(cup_present()) {
+        if(WHITE_BUTTON_PRESSED){ // next drink
+			act_drink= (act_drink+1) % AVAILABLE_DRINKS;
+  	        play_sound('c'+act_drink);   // drink indicator sounds
+
+			for (i=0;i<30;i++) {
+				set_leds(i);
+				_delay_ms(10);
+			}
+  	        while (WHITE_BUTTON_PRESSED) ;  // wait for button release
+			set_leds(LEDS_BLUE);
+            
+        }
+        else if (GREEN_BUTTON_PRESSED){  // choose this drink
+			set_leds(LEDS_GREEN);
+  	        play_sound('b');             // accept sound
+  	        _delay_ms(2000);             // wait until sound played
+            return(act_drink);
+        }
+    }
+    return(-1);   // cup was removed !
+}
+
+
+#define IR_TIMEOUT 100
+#define IR_ONTIME  20
+#define IR_OFFTIME 5
+
+void send_IR_code (uint32_t code)
+{
+	uint32_t i;
+	IR_ON=1;
+	for (i=0;i<=32;i++) {
+		if (code & ((uint32_t)1<<i)) _delay_ms(IR_ONTIME); 
+		else _delay_ms(IR_OFFTIME);
+		IR_ON ^= 1;
+	}
+	IR_ON=0;
+	PORTB &= ~(1<<1);
+}
+
+
+void request_delivery (uint8_t p1, uint8_t p2, uint8_t p3, uint8_t p4)
+{
+	uint32_t code=0xA5000000;
+	p1 &= 0x0f; p2 &= 0x0f; p3 &= 0x0f; p4 &= 0x0f;
+	code |= (((uint32_t)p4 << 20) | ((uint32_t)p3<<16) | ((uint32_t)p2<<12) | ((uint32_t)p1<<8));
+	code |= ((p4 << 4) + p3) ^ ((p2<<4) | p1);
+    send_IR_code(code);
+}
+
+
+
+void init_gpio()
+{
+    DDRB |=(1<<1);          // IR LED 
+    DDRF |=(1<<5);          // Servo (Eyelid)
+    DDRD |=(1<<1);          // Big Greed LED 
+      
+    DDRD &= ~(1<<0);        // Cup Recognition Input
+    PORTD |= (1<<0);        // Pullup
+
+    DDRD &= ~(1<<4);        // Button1 (White) Input
+    PORTD |= (1<<4);        // Pullup
+
+    DDRC &= ~(1<<6);        // Button2 (Green) Input
+    PORTC |= (1<<6);        // Pullup
+}
 
 // -----------------MAIN---------------/
 void main () 
 {
-    uint8_t station=0;
+    uint8_t station=0;  //,coming_from_delivery=0;
+    int8_t  selected_drink;
     uint16_t threshold;
+    uint8_t delivery;
     
     cli();
-      
-    PRR1 |= (1<<PRUSB);  
-    
-    CPU_PRESCALE(0);
+    PRR1 |= (1<<PRUSB);   // disable USB interrupts - this is necessary to use interrupts on the ATmega32u4
+    CPU_PRESCALE(0);      // just to make sure we're running at full speed
 
-    DDRF |=(1<<5);          // IR LED 
-    DDRF |=(1<<6);          // Servo (Eyelid)
-      
-    DDRD &= ~(1<<4);        // Button1 Input
-    DDRD &= ~(1<<0);        // Button2 Input
-    PORTD |= (1<<4);        // Button1 Pullup
-    PORTD |= (1<<0);        // Button2 Pullup
-
-         
+    init_gpio();
     init_uart(9600); 
     init_adc();
     init_leds();
     init_motors();
     init_timer();
-    
+    set_leds(LEDS_OFF);
     sei();
     
-    // close and open lid
-    for (servopos=35;servopos<150;servopos++)  _delay_ms(20);
-    for (servopos=150;servopos>35;servopos--)  _delay_ms(20);
+    PORTD |= (1<<1);   // Big Led on
+    stop_sound();      // stop running song (if any)
+    blink_eye(5);      // welcome blink :)
 
-    IR_ON=1;
-    
-    set_leds(2);
+    set_leds(LEDS_RED);                // red: indicate calibration
     threshold=get_threshold();    
-
-
-
-    // start song
-    uart_transmit('1');
+    
 
     while(1) {
+
+		set_leds(LEDS_OFF);           // blue: indicate wait for cup
    
-        followLine(threshold);
-        station=check_RFID();
-        if (station) {
-            uart_transmit('2');  //take order
-            stop();
-            take_order();
-        }
+		followLine(threshold);
+		station=check_RFID();
+		if (station) {            // station found: ready to take an order
+			stop_sound();
+			stop_motors();
+			blink_eye(3);
+			//coming_from_delivery=0;
+
+			selected_drink=take_order();
+			if (selected_drink>-1) {
+					
+				play_sound('1');   // start a song
+				get_drink(station,selected_drink,threshold);
+				// coming_from_delivery=1;
+				
+				set_leds(LEDS_GREEN);     
+				play_sound('f');   // voila - drink should be here !
+				_delay_ms(2000);
+
+				while (cup_present());    // wait for glass removal    
+				_delay_ms(500);
+
+			}
+			
+			if ((station==NUM_STATIONS) || ((station==2) && (get_direction()==TO_BASE))) {
+				make_u_turn();
+			}
+		} 
     }   
  }
+

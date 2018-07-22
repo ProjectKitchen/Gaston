@@ -3,9 +3,9 @@
 
 void init_leds()
 {
-    DDRB |= (1<<2);  // LEDStripe blue 
-    DDRB |= (1<<6);  // LEDStripe red
-    DDRB |= (1<<3);  // LEDStripe green
+    DDRB |= (1<<2);  // LEDStripe red 
+    DDRB |= (1<<6);  // LEDStripe green
+    DDRB |= (1<<3);  // LEDStripe blue
 }
 
 

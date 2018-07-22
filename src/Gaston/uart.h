@@ -14,5 +14,7 @@ uint8_t uart_available(void);
 
 uint8_t check_RFID(void);
 
+uint8_t get_direction();
+
 
 #endif
