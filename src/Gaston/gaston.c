@@ -59,49 +59,33 @@ void blink_eye(uint8_t speed) {
     for (servopos=150;servopos>100;servopos--)  for (i=0;i<speed;i++) _delay_ms(1);
     servopos=0;
 }
-void play_sound(char c)
-{
-	uart_transmit(c);
-}
-
-void stop_sound()
-{
-	play_sound('0');
-}
 
 
 int8_t take_order(void) {
 	int seconds=0,i;
 	uint8_t act_drink=0;
-	uint32_t timer=0;
+	uint32_t timer=0;    
 
-	set_leds(LEDS_GREEN);
-	    
     while((timer < ORDER_TIMEOUT*1000) && (!cup_present())) {
         _delay_ms(20);
         timer+=20;
+        if ((timer % 800) < 400) 	set_leds(LEDS_GREEN); else 	set_leds(LEDS_OFF);
     }
 
     if (!cup_present()) return(-1);   // order timed out !
 
-    set_leds(LEDS_GREEN|LEDS_RED);     // cup is here - let's go!
+    set_leds(LEDS_BLUE);
 	play_sound('a');          // take order sound
     _delay_ms(500);
-    set_leds(LEDS_BLUE);
-
 
 	while(cup_present()) {
         if(WHITE_BUTTON_PRESSED){ // next drink
+		    set_leds(LEDS_GREEN|LEDS_RED); 
 			act_drink= (act_drink+1) % AVAILABLE_DRINKS;
-  	        play_sound('c'+act_drink);   // drink indicator sounds
-
-			for (i=0;i<30;i++) {
-				set_leds(i);
-				_delay_ms(10);
-			}
-  	        while (WHITE_BUTTON_PRESSED) ;  // wait for button release
+  	        play_sound('m'+act_drink);   // drink indicator sounds
+			_delay_ms(1000);
 			set_leds(LEDS_BLUE);
-            
+  	        while (WHITE_BUTTON_PRESSED) ;  // wait for button release            
         }
         else if (GREEN_BUTTON_PRESSED){  // choose this drink
 			set_leds(LEDS_GREEN);
@@ -208,10 +192,16 @@ void main ()
 				// coming_from_delivery=1;
 				
 				set_leds(LEDS_GREEN);     
-				play_sound('f');   // voila - drink should be here !
+				play_sound('e');   // voila - drink should be here !
 				_delay_ms(2000);
 
-				while (cup_present());    // wait for glass removal    
+				uint32_t timer=0;
+				while (cup_present()) {    // wait for glass removal
+					_delay_ms(20);
+					timer+=20;
+					if ((timer % 400) < 200) set_leds(LEDS_GREEN); else set_leds(LEDS_OFF);
+				}    
+				set_leds(LEDS_OFF);     
 				_delay_ms(500);
 
 			}
