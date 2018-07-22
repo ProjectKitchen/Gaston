@@ -12,9 +12,10 @@ void uart_sendstring (char *str);
 
 uint8_t uart_available(void);
 
-uint8_t check_RFID(void);
+void play_sound(char c);
 
-uint8_t get_direction();
+void stop_sound() ;
 
+void resume_sound();
 
 #endif
