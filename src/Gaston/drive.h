@@ -15,6 +15,6 @@ void stop_motors() ;
 void get_drink(uint8_t station, uint8_t drink, uint16_t threshold) ;
 uint16_t get_threshold();
 uint8_t cup_present() ;
-
+uint8_t get_direction() ;
 
 #endif

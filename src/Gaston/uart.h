@@ -16,6 +16,5 @@ void play_sound(char c);
 
 void stop_sound() ;
 
-void resume_sound();
 
 #endif

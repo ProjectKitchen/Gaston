@@ -14,6 +14,7 @@
 #define WHITE_BUTTON_PRESSED !(PIND & (1<<4))
 #define GREEN_BUTTON_PRESSED !(PINC & (1<<6))
 #define ORDER_TIMEOUT 10
+#define NUM_SONGS 4
 
 
 volatile uint8_t IR_ON=0;
@@ -143,6 +144,8 @@ void init_gpio()
     PORTC |= (1<<6);        // Pullup
 }
 
+
+
 // -----------------MAIN---------------/
 void main () 
 {
@@ -150,6 +153,9 @@ void main ()
     int8_t  selected_drink;
     uint16_t threshold;
     uint8_t delivery;
+    uint8_t actsong=0;
+
+    
     
     cli();
     PRR1 |= (1<<PRUSB);   // disable USB interrupts - this is necessary to use interrupts on the ATmega32u4
@@ -178,18 +184,19 @@ void main ()
    
 		followLine(threshold);
 		station=check_RFID();
-		if (station) {            // station found: ready to take an order
+		if (station) {               // station found: ready to take an order
 			stop_sound();
 			stop_motors();
 			blink_eye(3);
-			//coming_from_delivery=0;
+			blink_leds(station,LEDS_GREEN|LEDS_BLUE,200);
 
 			selected_drink=take_order();
 			if (selected_drink>-1) {
 					
-				play_sound('1');   // start a song
+				play_sound('1'+actsong);   // start a song
+				actsong=(actsong+1)%NUM_SONGS;
+				
 				get_drink(station,selected_drink,threshold);
-				// coming_from_delivery=1;
 				
 				set_leds(LEDS_GREEN);     
 				play_sound('e');   // voila - drink should be here !

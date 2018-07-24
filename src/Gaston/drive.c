@@ -170,6 +170,7 @@ uint8_t check_RFID(void) {
 void get_drink(uint8_t station, uint8_t drink, uint16_t threshold) 
 {
 	int i=0,c=0;
+	int waittime;
 	
 	if (get_direction()==FROM_BASE) make_u_turn();
 	
@@ -178,19 +179,20 @@ void get_drink(uint8_t station, uint8_t drink, uint16_t threshold)
 		i++; if (!(i % 5000)) {c++; set_leds(c);}
 		if (!cup_present())	{
 			 stop_motors();
+			 _delay_ms(50);
 			 play_sound('c');   // uh ! - we need a cup !
 			 while (!cup_present());
-			 resume_sound();
 		}
 	}
 		
 	stop_motors();
 	
 	request_delivery(drink_recipes[drink][0],drink_recipes[drink][1],drink_recipes[drink][2],drink_recipes[drink][3]);
+    waittime= (drink_recipes[drink][0]+drink_recipes[drink][1]+drink_recipes[drink][2]+drink_recipes[drink][3]);
 
-	for (i=0;i<300;i++) {
+	for (i=0;i<waittime;i++) {
 		set_leds(i);
-		_delay_ms(20);
+		_delay_ms(200);
 	}
 	
 	set_leds(LEDS_GREEN);

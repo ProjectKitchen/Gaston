@@ -49,13 +49,9 @@ uint8_t uart_available(void)
 }
 
 
-
-char actsound=0;
-
 void play_sound(char c)
 {
 	uart_transmit(c);
-	actsound=c;
 }
 
 void stop_sound()
@@ -63,9 +59,5 @@ void stop_sound()
 	play_sound('0');
 }
 
-void resume_sound()
-{
-	uart_transmit(actsound);
-}
 
 
