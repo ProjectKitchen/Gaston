@@ -10,6 +10,8 @@
 #include "leds.h"
 #include "drive.h"
 
+#define BATLOW 700   // ca. 10.5v
+
 #define DEFAULT_THRESHOLD 200
 #define DEADZONE 10
 
@@ -52,33 +54,22 @@ void make_u_turn()
 
 void followLine (uint16_t threshold) 
 {
-    static uint8_t wheeltimer=0;
     uint16_t IR_sense;
 
-    wheeltimer++;
-    
-    // if (!(wheeltimer%2))
-    {
-
-		IR_sense = read_adc(4);
-	   
-		if (IR_sense > threshold+DEADZONE) {
-			RIGHT_STOP;   
-			LEFT_FORWARD; 
-		}
-		else if (IR_sense < threshold-DEADZONE) {
-			LEFT_STOP; 
-			RIGHT_FORWARD;
-		} else  {
-			LEFT_FORWARD;
-			RIGHT_FORWARD;
-		}
+    checkbattery();
+	IR_sense = read_adc(4);
+   
+	if (IR_sense > threshold+DEADZONE) {
+		RIGHT_STOP;   
+		LEFT_FORWARD; 
 	}
-	/*	else {
-			LEFT_STOP;
-			RIGHT_STOP;
+	else if (IR_sense < threshold-DEADZONE) {
+		LEFT_STOP; 
+		RIGHT_FORWARD;
+	} else  {
+		LEFT_FORWARD;
+		RIGHT_FORWARD;
 	}
-	*/
 }
 
 
@@ -208,4 +199,32 @@ void get_drink(uint8_t station, uint8_t drink, uint16_t threshold)
 
 	set_leds(LEDS_GREEN);
     stop_motors();  // done	
+}
+
+
+void checkbattery()
+{
+    static int count=0;
+    uint16_t voltage = read_adc(7);
+
+    /*
+    if ((count++)%200==0)
+    {
+        char target[6];
+        int_to_str(voltage, target);
+        uart_sendstring (target);
+        uart_sendstring ("\n");      
+    }
+    */
+    
+    if(voltage < BATLOW)
+    {        
+        count++;
+    } else count=0;
+    
+    if (count>50) {
+        stop_motors();
+        while(1)
+            blink_sos(); //function in leds.c
+    }
 }

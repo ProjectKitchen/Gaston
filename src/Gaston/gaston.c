@@ -65,6 +65,7 @@ void blink_eye(uint8_t speed) {
 int8_t take_order(void) {
 	int seconds=0,i;
 	uint8_t act_drink=0;
+	uint8_t already_chosen=0;
 	uint32_t timer=0;    
 
     while((timer < ORDER_TIMEOUT*1000) && (!cup_present())) {
@@ -80,18 +81,19 @@ int8_t take_order(void) {
     _delay_ms(500);
 
 	while(cup_present()) {
-        if(WHITE_BUTTON_PRESSED){ // next drink
+        if( WHITE_BUTTON_PRESSED){ // next drink
 		    set_leds(LEDS_GREEN|LEDS_RED); 
 			act_drink= (act_drink+1) % AVAILABLE_DRINKS;
   	        play_sound('m'+act_drink);   // drink indicator sounds
-			_delay_ms(1000);
+			_delay_ms(500);
+			already_chosen=1;
 			set_leds(LEDS_BLUE);
   	        while (WHITE_BUTTON_PRESSED) ;  // wait for button release            
         }
-        else if (GREEN_BUTTON_PRESSED){  // choose this drink
+        else if ((GREEN_BUTTON_PRESSED) && (already_chosen)){  // choose this drink
 			set_leds(LEDS_GREEN);
   	        play_sound('b');             // accept sound
-  	        _delay_ms(2000);             // wait until sound played
+  	        _delay_ms(1000);             // wait until sound played
             return(act_drink);
         }
     }
@@ -131,7 +133,7 @@ void request_delivery (uint8_t p1, uint8_t p2, uint8_t p3, uint8_t p4)
 void init_gpio()
 {
     DDRB |=(1<<1);          // IR LED 
-    DDRF |=(1<<5);          // Servo (Eyelid)
+    DDRF =(1<<5);          // Servo (Eyelid)
     DDRD |=(1<<1);          // Big Greed LED 
       
     DDRD &= ~(1<<0);        // Cup Recognition Input

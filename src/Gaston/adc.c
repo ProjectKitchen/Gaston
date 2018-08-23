@@ -11,10 +11,9 @@ void init_adc (void) {
 
 uint16_t read_adc (uint16_t channel )
 {
-    ADMUX &= 0xf0;
-    ADMUX |= channel;    // select channel MUX
-    ADCSRA |= (1<<ADSC);                			 // single conversion
-    while (ADCSRA & (1<<ADSC));        			// wait for completion
+	ADMUX = (1<<REFS0) | channel;    // select channel MUX
+    ADCSRA |= (1<<ADSC);   			 // single conversion
+    while (ADCSRA & (1<<ADSC));      // wait for completion
     return ADCW;                                 
 }
 
