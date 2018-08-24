@@ -10,7 +10,7 @@
 #define IR_THRESHOLD 15
 #define STABLE_IR_TIME 4
 
-#define TIME_FACTOR 200
+#define TIME_FACTOR 1000
 
 uint8_t p1_time,p2_time,p3_time,p4_time;
 char message[100];
@@ -126,4 +126,4 @@ void dispense()
   Serial.println("Dispensing done.");
 }
 
-
+  
