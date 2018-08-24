@@ -21,6 +21,8 @@ AudioControlSGTL5000     sgtl5000_1;
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14
 
+int monitorOutput=false;
+
 void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
@@ -62,19 +64,22 @@ void loop() {
 
   if (Serial1.available() > 0) {
     incomingByte = Serial1.read();
-    Serial1.println(incomingByte, DEC);
 
-    if (incomingByte=='0'){
-       playWav1.stop();
-    } 
-    else {
-      filename[0]=incomingByte;
-      if (playWav1.isPlaying()) {
-             playWav1.stop();
-             delay(50);
-      }
-      playWav1.play(filename);
+    switch (incomingByte) {
+       case '?':  monitorOutput=true; break;
+       case '!':  monitorOutput=false; break;
+       default: 
+            if (monitorOutput) { Serial.write(incomingByte); break;}
+
+            if (incomingByte=='0') { playWav1.stop(); break; }
+            filename[0]=incomingByte;
+            if (playWav1.isPlaying()) {
+               playWav1.stop();
+               delay(50);
+            }
+            playWav1.play(filename);
     }
   }
+  
 }
 
