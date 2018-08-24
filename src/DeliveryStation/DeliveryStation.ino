@@ -31,7 +31,6 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("Waiting for IR-Code");  
   uint32_t actcode = get_IR_code(&p1_time, &p2_time, &p3_time, &p4_time);
   sprintf(message,"Received pump timings: %d, %d, %d, %d",p1_time,p2_time,p3_time,p4_time);  
   Serial.println(message);
@@ -56,7 +55,7 @@ uint32_t get_IR_code(uint8_t * p1, uint8_t * p2, uint8_t * p3, uint8_t * p4) {
   uint8_t s,actstate,code_valid;
 
   do {
-
+    Serial.println("Waiting for IR-Code");  
     while (debouncedRead(IR_PIN)==HIGH);   // wait for IR-Signal
     timestamp=millis();
     actstate=LOW;
@@ -90,8 +89,13 @@ uint32_t get_IR_code(uint8_t * p1, uint8_t * p2, uint8_t * p3, uint8_t * p4) {
         if ((b1 ^ b2) == b3) {
           Serial.println("--> valid!");
           code_valid=1;
-        } else Serial.println("--> invalid ..");
+        }
       }
+    }
+
+    if (!code_valid) {
+         Serial.println("--> invalid code ... retry in 1500 ms");
+         delay (1500);
     }
   } while (!code_valid); 
 
