@@ -14,7 +14,11 @@ uint8_t uart_available(void);
 
 void play_sound(char c);
 
+void play_drinkSong(uint8_t i);
+
 void stop_sound() ;
+
+void printDebugMessage(char * str);
 
 
 #endif

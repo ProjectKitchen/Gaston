@@ -4,6 +4,7 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
+#include "gaston.h"
 #include "adc.h"
 #include "uart.h"
 #include "leds.h"
@@ -14,7 +15,7 @@
 #define WHITE_BUTTON_PRESSED !(PIND & (1<<4))
 #define GREEN_BUTTON_PRESSED !(PINC & (1<<6))
 #define ORDER_TIMEOUT 10
-#define NUM_SONGS 4
+
 
 
 volatile uint8_t IR_ON=0;
@@ -154,10 +155,7 @@ void main ()
     uint8_t station=0;  //,coming_from_delivery=0;
     int8_t  selected_drink;
     uint16_t threshold;
-    uint8_t delivery;
-    uint8_t actsong=0;
-
-    
+    uint8_t delivery;    
     
     cli();
     PRR1 |= (1<<PRUSB);   // disable USB interrupts - this is necessary to use interrupts on the ATmega32u4
@@ -195,9 +193,7 @@ void main ()
 			selected_drink=take_order();
 			if (selected_drink>-1) {
 					
-				play_sound('1'+actsong);   // start a song
-				actsong=(actsong+1)%NUM_SONGS;
-				
+				play_drinkSong(selected_drink);   // start a song				
 				get_drink(station,selected_drink,threshold);
 				
 				set_leds(LEDS_GREEN);     

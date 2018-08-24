@@ -1,10 +1,6 @@
 #ifndef DRIVE_H
 #define DRIVE_H
 
-
-#define AVAILABLE_DRINKS 3
-
-#define NUM_STATIONS 3
 #define FROM_BASE    0
 #define TO_BASE      1
 

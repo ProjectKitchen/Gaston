@@ -5,12 +5,12 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include "gaston.h"
 #include "adc.h"
 #include "uart.h"
 #include "leds.h"
 #include "drive.h"
 
-#define BATLOW 700   // ca. 10.5v
 
 #define DEFAULT_THRESHOLD 200
 #define DEADZONE 10
@@ -23,8 +23,16 @@
 #define LEFT_BACK     PORTB &= ~(1<<4); PORTB |= (1<<5)
 #define LEFT_STOP     PORTB &= ~(1<<4); PORTB &= ~(1<<5);
 
-uint8_t drink_recipes[AVAILABLE_DRINKS][4] = {  {15,0,0,0} , {0,15,0,0} , {0,0,15,0} };
+#define TIME_FACTOR 1000
 
+// put in the drink recipies here:
+// the 4 time values represent pump on times, range is 0 to 15
+// first value is pump1, second value is pump2, ... 
+// time values are multiplied by TIME FACTOR:  e.g.: 15 * TIME_FACTOR 1000 = 15 seconds on-time
+// caution: if TIME_FACTOR is modified, it needs to be modified also in the source code of the deliverystation.
+//
+
+uint8_t drink_recipes[AVAILABLE_DRINKS][4] = {  {10,0,0,0} , {0,10,0,0} , {0,0,10,0} };
 char codes[NUM_STATIONS][13]={"4500B8D1FBD7","82003CE0530D","82003CA1D6C9"};  // first is the base station (delivery), then the tables !
 
 
@@ -112,6 +120,7 @@ uint8_t get_direction()
 	return(direction);
 }
 
+
 uint8_t check_RFID(void) {
 
     static char actcode[13];
@@ -144,6 +153,7 @@ uint8_t check_RFID(void) {
                                 if (i>last_station) direction=FROM_BASE;
                                 else direction=TO_BASE;
                                 last_station=i;
+                                printDebugMessage(actcode);
                                 return(i+1);
                             }
                         }
@@ -165,9 +175,10 @@ void get_drink(uint8_t station, uint8_t drink, uint16_t threshold)
 	
 	if (get_direction()==FROM_BASE) make_u_turn();
 	
+	set_leds(LEDS_BLUE);
 	while (check_RFID() != 1)  {   // find the base station !
 		followLine(threshold);
-		i++; if (!(i % 5000)) {c++; set_leds(c);}
+		// i++; if (!(i % 5000)) {c++; set_leds(c);}
 		if (!cup_present())	{
 			 stop_motors();
 			 _delay_ms(50);
@@ -183,7 +194,7 @@ void get_drink(uint8_t station, uint8_t drink, uint16_t threshold)
 
 	for (i=0;i<waittime;i++) {
 		set_leds(i);
-		_delay_ms(200);
+		_delay_ms(TIME_FACTOR);
 	}
 	
 	set_leds(LEDS_GREEN);

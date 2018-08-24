@@ -1,9 +1,13 @@
 #include <avr/io.h> 
+
+#include "gaston.h"
 #include "uart.h"
 
 #ifndef F_CPU
 #define F_CPU 16000000
 #endif
+
+uint8_t drink_songs[AVAILABLE_DRINKS]= { '1', '2', '3' };
 
 
 void init_uart (uint32_t baudrate) 
@@ -54,10 +58,23 @@ void play_sound(char c)
 	uart_transmit(c);
 }
 
+void play_drinkSong(uint8_t i)
+{
+	play_sound(drink_songs[i]);
+}
+
+
 void stop_sound()
 {
 	play_sound('0');
 }
 
+void printDebugMessage(char * str)
+{
+	uart_transmit('?');
+	uart_sendstring(str);
+	uart_transmit('\n');
+	uart_transmit('!');	
+}
 
 
