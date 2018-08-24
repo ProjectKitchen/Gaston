@@ -57,8 +57,9 @@ void init_timer()
 void blink_eye(uint8_t speed) {
 	int i;
     // close and open lid
-    for (servopos=100;servopos<150;servopos++)  for (i=0;i<speed;i++) _delay_ms(1);
-    for (servopos=150;servopos>100;servopos--)  for (i=0;i<speed;i++) _delay_ms(1);
+    for (servopos=100;servopos<130;servopos++)  for (i=0;i<speed;i++) _delay_ms(1);
+    for (servopos=130;servopos>100;servopos--)  for (i=0;i<speed;i++) _delay_ms(1);
+    _delay_ms(50);
     servopos=0;
 }
 
@@ -172,7 +173,9 @@ void main ()
     
     PORTD |= (1<<1);   // Big Led on
     stop_sound();      // stop running song (if any)
-    blink_eye(5);      // welcome blink :)
+    _delay_ms(1000);
+    blink_eye(20);      // welcome blink :)
+    play_sound('f');
 
     set_leds(LEDS_RED);                // red: indicate calibration
     threshold=get_threshold();    
@@ -187,7 +190,7 @@ void main ()
 		if (station) {               // station found: ready to take an order
 			stop_sound();
 			stop_motors();
-			blink_eye(3);
+			blink_eye(7);
 			blink_leds(station,LEDS_GREEN|LEDS_BLUE,200);
 
 			selected_drink=take_order();
@@ -209,7 +212,8 @@ void main ()
 				set_leds(LEDS_OFF);     
 				_delay_ms(500);
 
-			}
+			} else play_sound('g');
+
 			
 			if ((station==NUM_STATIONS) || ((station==2) && (get_direction()==TO_BASE))) {
 				make_u_turn();
