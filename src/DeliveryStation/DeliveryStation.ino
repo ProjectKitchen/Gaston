@@ -21,7 +21,7 @@ void setup() {
   pinMode(P2_PIN, OUTPUT);
   pinMode(P3_PIN, OUTPUT);
   pinMode(P4_PIN, OUTPUT);
-  pinMode(IR_PIN, INPUT_PULLUP);
+  pinMode(IR_PIN, INPUT);
 
   Serial.begin(115200);
   delay(3000);
@@ -34,16 +34,17 @@ void loop() {
   uint32_t actcode = get_IR_code(&p1_time, &p2_time, &p3_time, &p4_time);
   sprintf(message,"Received pump timings: %d, %d, %d, %d",p1_time,p2_time,p3_time,p4_time);  
   Serial.println(message);
-  dispense();
+//  dispense();
 }
 
 uint8_t debouncedRead(uint8_t pin) {
   uint8_t s,i=0;
   s=digitalRead(pin);
-  while (i<40) {
+  while (i<20) {
     if (s != digitalRead(pin)) {
       i=0; s=digitalRead(pin);
     } else i++;
+    delayMicroseconds(100);
   }  
   return(s);
 }
@@ -62,7 +63,7 @@ uint32_t get_IR_code(uint8_t * p1, uint8_t * p2, uint8_t * p3, uint8_t * p4) {
     code=0;
     code_valid=0;
     actpos=0;
-
+/*
     while ((millis()-timestamp) < IR_TIMEOUT) {
       s=digitalRead(IR_PIN);
       if (s!=actstate) {
@@ -78,7 +79,29 @@ uint32_t get_IR_code(uint8_t * p1, uint8_t * p2, uint8_t * p3, uint8_t * p4) {
          }
       }
     }
-    digitalWrite(LED_PIN,HIGH);
+*/
+    uint8_t newstate_stable=0;
+    while ((millis()-timestamp) < IR_TIMEOUT) {
+
+      if (digitalRead(IR_PIN) != actstate) newstate_stable++;
+      else newstate_stable=0;
+      delayMicroseconds(10); 
+
+      if (newstate_stable > 20) {
+        acttime=millis();
+        // Serial.println(acttime-timestamp);
+        if ((acttime-timestamp) > IR_THRESHOLD) 
+           code|=((uint32_t)1<<actpos);
+        actpos++;
+        digitalWrite(LED_PIN,actstate);
+        if (actstate == HIGH) actstate=LOW; else actstate=HIGH;
+        newstate_stable=0;
+        timestamp=millis();
+      }
+    }
+
+    
+    digitalWrite(LED_PIN,LOW);
     if (actpos > 2) { 
       Serial.print("checking code 0x");
       Serial.print(code,HEX);
