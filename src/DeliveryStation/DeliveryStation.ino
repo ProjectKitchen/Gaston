@@ -34,7 +34,7 @@ void loop() {
   uint32_t actcode = get_IR_code(&p1_time, &p2_time, &p3_time, &p4_time);
   sprintf(message,"Received pump timings: %d, %d, %d, %d",p1_time,p2_time,p3_time,p4_time);  
   Serial.println(message);
-//  dispense();
+  dispense();
 }
 
 uint8_t debouncedRead(uint8_t pin) {
