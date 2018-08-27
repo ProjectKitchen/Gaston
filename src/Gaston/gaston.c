@@ -174,12 +174,27 @@ void main ()
     PORTD |= (1<<1);   // Big Led on
     stop_sound();      // stop running song (if any)
     _delay_ms(1000);
-    blink_eye(20);      // welcome blink :)
+    blink_eye(10);      // welcome blink :)
+    _delay_ms(700);
     play_sound('f');
+
+    /* 
+    // for testing IR transmission 
+	while (1) {
+        if( WHITE_BUTTON_PRESSED){ 
+			set_leds(LEDS_BLUE|LEDS_RED|LEDS_GREEN);
+			request_delivery (10,0,0,0);
+		}
+        if( GREEN_BUTTON_PRESSED){ 
+			set_leds(LEDS_GREEN);
+			request_delivery (0,10,0,0);
+		}
+		
+	}
+	*/
 
     set_leds(LEDS_RED);                // red: indicate calibration
     threshold=get_threshold();    
-    
 
     while(1) {
 
