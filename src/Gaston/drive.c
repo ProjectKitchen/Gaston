@@ -33,7 +33,7 @@
 //
 
 uint8_t drink_recipes[AVAILABLE_DRINKS][4] = {  {10,0,0,0} , {0,10,0,0} , {0,0,10,0} };
-char codes[NUM_STATIONS][13]={"4500B8D1FBD7","82003CE0530D","82003CA1D6C9"};  // first is the base station (delivery), then the tables !
+char codes[NUM_STATIONS][13]={"4500B8D1FBD7","82003CE0530D", "82003C7EEC2C","82003CA1D6C9"};  // first is the base station (delivery), then the tables !
 
 
 uint8_t last_station=0;
@@ -146,6 +146,7 @@ uint8_t check_RFID(void) {
                     }
                     else if (actpos==12) {
                         actcode[actpos]=0;
+                        printDebugMessage(actcode);
                         for (i=0;i<NUM_STATIONS;i++) {
                             if (!strcmp(actcode,codes[i]) && (i!=last_code)) {
                                 last_code=i;
@@ -153,7 +154,6 @@ uint8_t check_RFID(void) {
                                 if (i>last_station) direction=FROM_BASE;
                                 else direction=TO_BASE;
                                 last_station=i;
-                                printDebugMessage(actcode);
                                 return(i+1);
                             }
                         }

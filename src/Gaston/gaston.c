@@ -195,7 +195,7 @@ void main ()
 
     set_leds(LEDS_RED);                // red: indicate calibration
     threshold=get_threshold();    
-
+    
     while(1) {
 
 		set_leds(LEDS_OFF);           // blue: indicate wait for cup
