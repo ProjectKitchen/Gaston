@@ -70,14 +70,15 @@ void loop() {
        case '!':  monitorOutput=false; break;
        default: 
             if (monitorOutput) { Serial.write(incomingByte); break;}
-
-            if (incomingByte=='0') { playWav1.stop(); break; }
-            filename[0]=incomingByte;
-            if (playWav1.isPlaying()) {
-               playWav1.stop();
-               delay(50);
+            else {
+              if (incomingByte=='0') { playWav1.stop(); break; }
+              filename[0]=incomingByte;
+              if (playWav1.isPlaying()) {
+                 playWav1.stop();
+                 delay(50);
+              }
+              playWav1.play(filename);
             }
-            playWav1.play(filename);
     }
   }
   
