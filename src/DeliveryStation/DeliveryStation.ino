@@ -1,9 +1,16 @@
 
 #define LED_PIN 9
+
+// pins for pumps
 #define P1_PIN  4
 #define P2_PIN  5
 #define P3_PIN  6
 #define P4_PIN  7
+
+// pins for buttons
+#define B1_PIN 10
+#define B2_PIN 16
+#define B3_PIN 14
 
 #define IR_PIN  15
 #define IR_TIMEOUT 100
@@ -22,6 +29,9 @@ void setup() {
   pinMode(P3_PIN, OUTPUT);
   pinMode(P4_PIN, OUTPUT);
   pinMode(IR_PIN, INPUT);
+  pinMode(B1_PIN, INPUT_PULLUP);
+  pinMode(B2_PIN, INPUT_PULLUP);
+  pinMode(B3_PIN, INPUT_PULLUP);
 
   Serial.begin(115200);
   delay(3000);
@@ -57,7 +67,16 @@ uint32_t get_IR_code(uint8_t * p1, uint8_t * p2, uint8_t * p3, uint8_t * p4) {
 
   do {
     Serial.println("Waiting for IR-Code");  
-    while (debouncedRead(IR_PIN)==HIGH);   // wait for IR-Signal
+    while (debouncedRead(IR_PIN)==HIGH)   // wait for IR-Signal
+    {
+      if (digitalRead(B1_PIN) == LOW) 
+      {  digitalWrite(P1_PIN,HIGH); while (digitalRead(B1_PIN) == LOW); digitalWrite(P1_PIN,LOW);  }
+      if (digitalRead(B2_PIN) == LOW) 
+      {  digitalWrite(P2_PIN,HIGH); while (digitalRead(B2_PIN) == LOW); digitalWrite(P2_PIN,LOW);  }
+      if (digitalRead(B3_PIN) == LOW) 
+      {  digitalWrite(P3_PIN,HIGH); while (digitalRead(B3_PIN) == LOW); digitalWrite(P3_PIN,LOW);  }
+    }
+   
     timestamp=millis();
     actstate=LOW;
     code=0;
