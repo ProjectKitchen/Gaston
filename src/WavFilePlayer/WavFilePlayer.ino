@@ -55,12 +55,17 @@ void playFile(const char *filename)
 
 char filename[] = "x.wav";
 
+int counter=0;
+
 void loop() {
   int incomingByte;
 
   float vol = analogRead(15);
-  vol = vol / 3000;
-  sgtl5000_1.volume(vol);
+  vol = vol / 2200;
+
+  counter=(counter+1)%500;
+  if (!counter)
+     sgtl5000_1.volume(vol);
 
   if (Serial1.available() > 0) {
     incomingByte = Serial1.read();
