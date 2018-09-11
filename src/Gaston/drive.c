@@ -20,13 +20,11 @@
 #define LEFT_BACK     PORTB &= ~(1<<4); PORTB |= (1<<5)
 #define LEFT_STOP     PORTB &= ~(1<<4); PORTB &= ~(1<<5);
 
-#define TIME_FACTOR 1000
-
 // put in the drink recipies here:
 // the 4 time values represent pump on times, range is 0 to 15
 // first value is pump1, second value is pump2, ... 
-// time values are multiplied by TIME FACTOR:  e.g.: 15 * TIME_FACTOR 1000 = 15 seconds on-time
-// caution: if TIME_FACTOR is modified, it needs to be modified also in the source code of the deliverystation.
+// time values are multiplied by TIME FACTOR:  e.g.: 15 * TIME_FACTOR_WAIT_DELIVERY 1000 = 15 seconds on-time
+// caution: if TIME_FACTOR_WAIT_DELIVERY is modified, it needs to be modified also in the source code of the deliverystation.
 //
 
 uint8_t drink_recipes[AVAILABLE_DRINKS][4] = {  {10,0,0,0} , {0,10,0,0} , {0,0,10,0} };
@@ -72,24 +70,32 @@ int16_t get_ir_value()
 	return((int16_t)(sum/AVERAGE_IR));
 }
 
+
+extern uint8_t m1,m2;
+
 void followLine (uint16_t threshold) 
 {
     uint16_t IR_sense;
-
     checkbattery();
 	IR_sense = get_ir_value();
    
+   
 	if (IR_sense > threshold+IR_DEADZONE) {
-		RIGHT_STOP;   
-		LEFT_FORWARD; 
+		//LEFT_FORWARD; 
+		m2=0; m1=LINEFOLLOW_SPEED; 
+		RIGHT_STOP;    
 	}
 	else if (IR_sense < threshold-IR_DEADZONE) {
-		LEFT_STOP; 
-		RIGHT_FORWARD;
+		// RIGHT_FORWARD; 
+		m1=0; m2=LINEFOLLOW_SPEED;
+		LEFT_STOP;    
+
 	} else  {
-		LEFT_FORWARD;
-		RIGHT_FORWARD;
+		//LEFT_FORWARD; 
+		//RIGHT_FORWARD;
+		m1=LINEFOLLOW_SPEED;m2=LINEFOLLOW_SPEED;
 	}
+   
 }
 
 
@@ -97,6 +103,8 @@ void stop_motors ()
 {
 	LEFT_STOP;
 	RIGHT_STOP;
+	m1=0;
+	m2=0;
 }
 
 
@@ -104,17 +112,19 @@ uint16_t get_threshold()
 {
     uint16_t threshold,bright_ir_value,dark_ir_value;
 
-    while ((PIND & (1<<4)) !=0 ) ;
-    bright_ir_value=get_ir_value();
+    while ((PIND & (1<<4)) !=0 ) 
+        bright_ir_value=get_ir_value();
     
+    
+    set_leds(LEDS_GREEN);  
+
     // one step calibration: just place robot next to line to get background color
     // the line is assumed to be darker ( difference DEFAULT_THRESHOLD is assumed)
     
     dark_ir_value=DEFAULT_DARK_IR_VALUE;  
     
     //    uncomment for 2-step calibration ( where line color is measured seperately):
-	//    while ((PINC & (1<<6))!=0) ;
-	//    dark_ir_value=get_ir_value();
+    //while ((PINC & (1<<6))!=0)  dark_ir_value=get_ir_value();
     
     threshold= (dark_ir_value+bright_ir_value) / 2;
     return(threshold);
@@ -207,7 +217,7 @@ void get_drink(uint8_t station, uint8_t drink, uint16_t threshold)
 
 	for (i=0;i<waittime;i++) {
 		set_leds(i);
-		_delay_ms(TIME_FACTOR);
+		_delay_ms(TIME_FACTOR_WAIT_DELIVERY);
 	}
 	
 	set_leds(LEDS_GREEN);

@@ -14,13 +14,12 @@
 
 #define WHITE_BUTTON_PRESSED !(PIND & (1<<4))
 #define GREEN_BUTTON_PRESSED !(PINC & (1<<6))
-#define ORDER_TIMEOUT 10
-
 
 
 volatile uint8_t IR_ON=0;
 volatile uint16_t servocnt=0;
 volatile uint8_t  servopos=0;
+volatile uint8_t  m1=0,m2=0,motorcnt=0;
 
 // ISR for 16-bit-timer1 compare 1A match
 // handles IR- and Servo-PWM
@@ -28,7 +27,7 @@ volatile uint8_t  servopos=0;
 ISR(TIMER1_COMPA_vect) 
 {
 	if (IR_ON) PORTB ^= (1<<1);  // 36kHz IR pulse
-
+	
 	servocnt++;
 	if (servocnt == 1441)  // 20ms interval 
 		if (servopos) PORTF|=(1<<5);
@@ -39,7 +38,16 @@ ISR(TIMER1_COMPA_vect)
 		servocnt=servopos;
 	}
 
+	motorcnt++;
+	if (!motorcnt) {
+		if (m1!=0) PORTB |= (1<<4); // else PORTB &= ~(1<<4);
+		if (m2!=0) PORTE |= (1<<6);	// else PORTE &= ~(1<<6); 	
+	} else {
+  	  if (motorcnt == m1) PORTB &= ~(1<<4); 
+  	  if (motorcnt == m2) PORTE &= ~(1<<6); 
+    }
 }
+
 
 void init_timer()
 {	
@@ -50,7 +58,8 @@ void init_timer()
 	OCR1AH = 0;
 	OCR1AL = 222;  // 72 kHz interrupt frequency for compare match
 	
-	TIMSK1 = 1 << OCIE1A;
+	TIMSK1 = (1 << OCIE1A);
+	
 }
 
 
@@ -215,6 +224,7 @@ void main ()
 
     set_leds(LEDS_RED);                // red: indicate calibration
     threshold=get_threshold();    
+  
     
     while(1) {
 

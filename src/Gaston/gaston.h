@@ -9,9 +9,15 @@
 #define BATLOW_ALERTCOUNTER   100
 
 #define DEFAULT_DARK_IR_VALUE  700
-#define IR_DEADZONE  10
+#define IR_DEADZONE  50
 
-#define AVERAGE_IR 20
+#define ORDER_TIMEOUT 7
+
+#define TIME_FACTOR_WAIT_DELIVERY 600
+
+#define LINEFOLLOW_SPEED 180
+
+#define AVERAGE_IR 10
 
 
 #endif
