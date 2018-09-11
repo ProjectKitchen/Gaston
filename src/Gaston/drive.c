@@ -12,9 +12,6 @@
 #include "drive.h"
 
 
-#define DEFAULT_THRESHOLD 200
-#define DEADZONE 10
-
 #define RIGHT_FORWARD PORTD &= ~(1<<7); PORTE |= (1<<6)
 #define RIGHT_BACK    PORTE &= ~(1<<6); PORTD |= (1<<7)
 #define RIGHT_STOP    PORTE &= ~(1<<6); PORTD &= ~(1<<7);
@@ -60,18 +57,33 @@ void make_u_turn()
     
 }
 
+
+int16_t get_ir_value()
+{
+	static int16_t buf[AVERAGE_IR]={0};
+	static int16_t cnt=0;
+	static int32_t sum=0;
+	
+	sum-=buf[cnt];
+	buf[cnt]=read_adc(4);
+	sum+=buf[cnt];
+	cnt=(cnt+1)%AVERAGE_IR;
+	
+	return((int16_t)(sum/AVERAGE_IR));
+}
+
 void followLine (uint16_t threshold) 
 {
     uint16_t IR_sense;
 
     checkbattery();
-	IR_sense = read_adc(4);
+	IR_sense = get_ir_value();
    
-	if (IR_sense > threshold+DEADZONE) {
+	if (IR_sense > threshold+IR_DEADZONE) {
 		RIGHT_STOP;   
 		LEFT_FORWARD; 
 	}
-	else if (IR_sense < threshold-DEADZONE) {
+	else if (IR_sense < threshold-IR_DEADZONE) {
 		LEFT_STOP; 
 		RIGHT_FORWARD;
 	} else  {
@@ -90,21 +102,22 @@ void stop_motors ()
 
 uint16_t get_threshold()
 {
-    uint16_t threshold_low,threshold_high;
+    uint16_t threshold,bright_ir_value,dark_ir_value;
 
     while ((PIND & (1<<4)) !=0 ) ;
-    threshold_high=read_adc(4);
+    bright_ir_value=get_ir_value();
     
     // one step calibration: just place robot next to line to get background color
     // the line is assumed to be darker ( difference DEFAULT_THRESHOLD is assumed)
     
-    threshold_low=threshold_high+DEFAULT_THRESHOLD;  
+    dark_ir_value=DEFAULT_DARK_IR_VALUE;  
     
     //    uncomment for 2-step calibration ( where line color is measured seperately):
 	//    while ((PINC & (1<<6))!=0) ;
-	//    threshold_low=read_adc(4);
+	//    dark_ir_value=get_ir_value();
     
-    return((threshold_low+threshold_high)/2);
+    threshold= (dark_ir_value+bright_ir_value) / 2;
+    return(threshold);
 }
 
 
@@ -233,7 +246,7 @@ void checkbattery()
         count++;
     } else count=0;
     
-    if (count>50) {
+    if (count>BATLOW_ALERTCOUNTER) {
         stop_motors();
         while(1)
             blink_sos(); //function in leds.c

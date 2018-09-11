@@ -176,7 +176,7 @@ void main ()
     _delay_ms(1000);
     blink_eye(10);      // welcome blink :)
     _delay_ms(700);
-    play_sound('f');
+    play_sound('f'); 
 
     /* 
     // for testing IR transmission 
@@ -192,13 +192,33 @@ void main ()
 		
 	}
 	*/
+	
+	
+	/*
+	// for testing line following sensor
+	
+	char str[10];
+	uint16_t val;
+	uint8_t cnt=0;
+	while (1) {
+		val=get_ir_value();
+		cnt=(cnt+1)%10;
+		if (!cnt) {
+			inttostr(val, str);
+			printDebugMessage(str);
+		}
+		_delay_ms(20);
+	}
+ 
+	*/
+	 
 
     set_leds(LEDS_RED);                // red: indicate calibration
     threshold=get_threshold();    
     
     while(1) {
 
-		set_leds(LEDS_OFF);           // blue: indicate wait for cup
+		set_leds(LEDS_OFF);  
    
 		followLine(threshold);
 		station=check_RFID();

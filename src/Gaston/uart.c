@@ -35,6 +35,17 @@ void uart_sendstring (char *str)
 }
 
 
+void inttostr(uint16_t val, char * target)
+{
+	int8_t i;
+	for (i=4;i>=0;i--) {
+		target[i] = (val % 10) + '0';
+		val/=10; 
+	}
+	target[5]=0;
+}
+
+
 uint8_t uart_receive (void)
 {
 	PORTB |= (1<<2);

@@ -13,5 +13,7 @@ uint16_t get_threshold();
 uint8_t cup_present() ;
 uint8_t get_direction() ;
 void checkbattery() ;
+int16_t get_ir_value();
+
 
 #endif

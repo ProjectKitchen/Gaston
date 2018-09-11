@@ -8,6 +8,8 @@ void uart_transmit (uint8_t c);
 
 uint8_t uart_receive (void);
 
+void inttostr(uint16_t val, char * target);
+
 void uart_sendstring (char *str);
 
 uint8_t uart_available(void);
