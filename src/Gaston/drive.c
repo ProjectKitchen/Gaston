@@ -82,18 +82,26 @@ void followLine (uint16_t threshold)
    
 	if (IR_sense > threshold+IR_DEADZONE) {
 		//LEFT_FORWARD; 
-		m2=0; m1=LINEFOLLOW_SPEED; 
-		RIGHT_STOP;    
+		RIGHT_STOP; m2=0;    
+//		if (m2>0) m2--; 
+		if (m1 < LINEFOLLOW_SPEED) m1++; 
 	}
 	else if (IR_sense < threshold-IR_DEADZONE) {
 		// RIGHT_FORWARD; 
-		m1=0; m2=LINEFOLLOW_SPEED;
-		LEFT_STOP;    
+//		m1=0; m2=LINEFOLLOW_SPEED;
+		LEFT_STOP; m1=0;    
+//		if (m1>0) m1--; 
+		if (m2 < LINEFOLLOW_SPEED) m2++; 
 
 	} else  {
 		//LEFT_FORWARD; 
 		//RIGHT_FORWARD;
-		m1=LINEFOLLOW_SPEED;m2=LINEFOLLOW_SPEED;
+	//	if (m1>LINEFOLLOW_SPEED_STRAIGHT) m1--; 
+	//	if (m1<LINEFOLLOW_SPEED_STRAIGHT) m1++; 
+	//	if (m2>LINEFOLLOW_SPEED_STRAIGHT) m2--; 
+	//	if (m2<LINEFOLLOW_SPEED_STRAIGHT) m2++;
+		m1=LINEFOLLOW_SPEED_STRAIGHT;
+		m2=LINEFOLLOW_SPEED_STRAIGHT;
 	}
    
 }

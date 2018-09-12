@@ -22,8 +22,8 @@ volatile uint8_t  servopos=0;
 volatile uint8_t  m1=0,m2=0,motorcnt=0;
 
 // ISR for 16-bit-timer1 compare 1A match
-// handles IR- and Servo-PWM
-// TBD: improve: use HW PWMs
+// handles all time-critical tasks (IR-codes, Motor- and Servo-PWM
+// TBD: improve: this uses a lot of CPU time .. use other pins and HW PWMs !
 ISR(TIMER1_COMPA_vect) 
 {
 	if (IR_ON) PORTB ^= (1<<1);  // 36kHz IR pulse
@@ -72,19 +72,40 @@ void blink_eye(uint8_t speed) {
     servopos=0;
 }
 
+void close_eye(uint8_t speed) {
+	int i;
+    for (servopos=100;servopos<130;servopos++)  for (i=0;i<speed;i++) _delay_ms(1);
+    _delay_ms(50);
+    servopos=0;
+}
+
+void open_eye(uint8_t speed) {
+	int i;
+    for (servopos=130;servopos>100;servopos--)  for (i=0;i<speed;i++) _delay_ms(1);
+    _delay_ms(50);
+    servopos=0;
+}
+
+
 
 int8_t take_order(void) {
 	int seconds=0,i;
 	uint8_t act_drink=0;
+	uint8_t sleeping=0;
 	uint8_t already_chosen=0;
 	uint32_t timer=0;    
 
     while((timer < ORDER_TIMEOUT*1000) && (!cup_present())) {
         _delay_ms(20);
         timer+=20;
-        if ((timer % 800) < 400) 	set_leds(LEDS_GREEN); else 	set_leds(LEDS_OFF);
+        if ((timer % 600) < 300) 	set_leds(LEDS_GREEN|LEDS_BLUE); else 	set_leds(LEDS_OFF);
+		if ((timer >= SLEEP_TIMEOUT*1000) && (!sleeping)) {
+			sleeping=1;
+			close_eye(25);
+		}
     }
 
+	if (sleeping) open_eye(3);
     if (!cup_present()) return(-1);   // order timed out !
 
     set_leds(LEDS_BLUE);
@@ -235,8 +256,9 @@ void main ()
 		if (station) {               // station found: ready to take an order
 			stop_sound();
 			stop_motors();
+			play_sound('h');       // arrive sound 
 			blink_eye(7);
-			blink_leds(station,LEDS_GREEN|LEDS_BLUE,200);
+			// blink_leds(station,LEDS_GREEN|LEDS_BLUE,200);
 
 			selected_drink=take_order();
 			if (selected_drink>-1) {
