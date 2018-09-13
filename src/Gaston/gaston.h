@@ -3,16 +3,16 @@
 #define GASTON_H
 
  
-#define NUM_STATIONS 4
+#define NUM_STATIONS 3
 #define AVAILABLE_DRINKS 3
 #define BATLOW 720   // ca. 11 volt
 #define BATLOW_ALERTCOUNTER   100
 
-#define DEFAULT_DARK_IR_VALUE  700
+#define DEFAULT_DARK_IR_VALUE  300
 #define IR_DEADZONE  40
 
-#define ORDER_TIMEOUT 15
-#define SLEEP_TIMEOUT 6
+#define ORDER_TIMEOUT 7
+#define SLEEP_TIMEOUT 3
 
 #define TIME_FACTOR_WAIT_DELIVERY 600
 
@@ -20,6 +20,8 @@
 #define LINEFOLLOW_SPEED_STRAIGHT 120
 
 #define AVERAGE_IR 10
+
+#define SAFETY_THRESHOLD 7000
 
 
 #endif

@@ -27,8 +27,9 @@
 // caution: if TIME_FACTOR_WAIT_DELIVERY is modified, it needs to be modified also in the source code of the deliverystation.
 //
 
-uint8_t drink_recipes[AVAILABLE_DRINKS][4] = {  {10,0,0,0} , {0,10,0,0} , {0,0,10,0} };
-char codes[NUM_STATIONS][13]={"4500B8D1FBD7","82003CE0530D", "82003C7EEC2C","82003CA1D6C9"};  // first is the base station (delivery), then the tables !
+uint8_t drink_recipes[AVAILABLE_DRINKS][4] = {  {12,0,0,0} , {0,12,0,0} , {0,0,12,0} };
+//char codes[NUM_STATIONS][13]={"4500B8D1FBD7","82003CE0530D", "82003C7EEC2C","82003CA1D6C9"};  // first is the base station (delivery), then the tables !
+char codes[NUM_STATIONS][13]={"4500B8D1FBD7", "82003C7EEC2C","82003CA1D6C9"};  // first is the base station (delivery), then the tables !
 
 
 uint8_t last_station=0;
@@ -73,35 +74,66 @@ int16_t get_ir_value()
 
 extern uint8_t m1,m2;
 
+#define MOVEMENT_RIGHT 0
+#define MOVEMENT_LEFT 1
+#define MOVEMENT_STRAIGHT 2
+
+
 void followLine (uint16_t threshold) 
 {
+	static uint32_t safety_count=0;
+	static uint8_t movement_state=MOVEMENT_LEFT;
+	
     uint16_t IR_sense;
     checkbattery();
 	IR_sense = get_ir_value();
    
    
 	if (IR_sense > threshold+IR_DEADZONE) {
-		//LEFT_FORWARD; 
 		RIGHT_STOP; m2=0;    
-//		if (m2>0) m2--; 
-		if (m1 < LINEFOLLOW_SPEED) m1++; 
+		if (m1 < LINEFOLLOW_SPEED) m1++;
+
+		if (movement_state != MOVEMENT_LEFT) {
+			movement_state=MOVEMENT_LEFT;
+			safety_count=0;
+		}
+		else {
+			safety_count++;
+			if (safety_count >= SAFETY_THRESHOLD) { 
+				stop_motors();
+				blink_sos();		
+			}		
+		}
 	}
 	else if (IR_sense < threshold-IR_DEADZONE) {
-		// RIGHT_FORWARD; 
-//		m1=0; m2=LINEFOLLOW_SPEED;
 		LEFT_STOP; m1=0;    
-//		if (m1>0) m1--; 
 		if (m2 < LINEFOLLOW_SPEED) m2++; 
+		if (movement_state != MOVEMENT_RIGHT) {
+			movement_state=MOVEMENT_RIGHT;
+			safety_count=0;
+		}
+		else {
+			safety_count++;
+			if (safety_count >= SAFETY_THRESHOLD) { 
+				stop_motors();
+				blink_sos();		
+			}		
+		}
 
 	} else  {
-		//LEFT_FORWARD; 
-		//RIGHT_FORWARD;
-	//	if (m1>LINEFOLLOW_SPEED_STRAIGHT) m1--; 
-	//	if (m1<LINEFOLLOW_SPEED_STRAIGHT) m1++; 
-	//	if (m2>LINEFOLLOW_SPEED_STRAIGHT) m2--; 
-	//	if (m2<LINEFOLLOW_SPEED_STRAIGHT) m2++;
 		m1=LINEFOLLOW_SPEED_STRAIGHT;
 		m2=LINEFOLLOW_SPEED_STRAIGHT;
+		if (movement_state != MOVEMENT_STRAIGHT) {
+			movement_state=MOVEMENT_STRAIGHT;
+			safety_count=0;
+		}
+		else {
+			safety_count++;
+			if (safety_count >= SAFETY_THRESHOLD) { 
+				stop_motors();
+				blink_sos();		
+			}		
+		}
 	}
    
 }
@@ -119,10 +151,20 @@ void stop_motors ()
 uint16_t get_threshold()
 {
     uint16_t threshold,bright_ir_value,dark_ir_value;
+	char str[10];
+	uint16_t cnt=0;
 
-    while ((PIND & (1<<4)) !=0 ) 
-        bright_ir_value=get_ir_value();
-    
+    while ((PIND & (1<<4)) !=0 )  {
+        bright_ir_value=get_ir_value();  
+              
+		// for testing line following sensor	
+		cnt=(cnt+1)%100;
+		if (!cnt) {
+			inttostr(bright_ir_value, str);
+			printDebugMessage(str);
+		}
+		_delay_ms(2);
+	}
     
     set_leds(LEDS_GREEN);  
 
@@ -266,7 +308,6 @@ void checkbattery()
     
     if (count>BATLOW_ALERTCOUNTER) {
         stop_motors();
-        while(1)
-            blink_sos(); //function in leds.c
+        blink_sos(); //function in leds.c
     }
 }

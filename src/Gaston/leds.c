@@ -40,24 +40,27 @@ void blink_leds(uint8_t count, uint8_t color, uint16_t delay)
 
 void blink_sos()
 {
-	uint8_t i;
-	for(i=0;i<3;i++) {
-		set_leds(LEDS_RED);
-		_delay_ms(100);
-		set_leds(LEDS_OFF);
-		_delay_ms(100);
-	}
-	for(i=0;i<3;i++) {
-		set_leds(LEDS_RED);
-		_delay_ms(200);
-		set_leds(LEDS_OFF);
-		_delay_ms(200);
-	}
-	for(i=0;i<3;i++) {
-		set_leds(LEDS_RED);
-		_delay_ms(100);
-		set_leds(LEDS_OFF);
-		_delay_ms(100);
+  uint8_t i;
+	
+	while (1) {
+		for(i=0;i<3;i++) {
+			set_leds(LEDS_RED);
+			_delay_ms(100);
+			set_leds(LEDS_OFF);
+			_delay_ms(100);
+		}
+		for(i=0;i<3;i++) {
+			set_leds(LEDS_RED);
+			_delay_ms(200);
+			set_leds(LEDS_OFF);
+			_delay_ms(200);
+		}
+		for(i=0;i<3;i++) {
+			set_leds(LEDS_RED);
+			_delay_ms(100);
+			set_leds(LEDS_OFF);
+			_delay_ms(100);
+		}
 	}
 }
 	

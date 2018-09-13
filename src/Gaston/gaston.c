@@ -223,24 +223,6 @@ void main ()
 	}
 	*/
 	
-	
-	/*
-	// for testing line following sensor
-	
-	char str[10];
-	uint16_t val;
-	uint8_t cnt=0;
-	while (1) {
-		val=get_ir_value();
-		cnt=(cnt+1)%10;
-		if (!cnt) {
-			inttostr(val, str);
-			printDebugMessage(str);
-		}
-		_delay_ms(20);
-	}
- 
-	*/
 	 
 
     set_leds(LEDS_RED);                // red: indicate calibration
