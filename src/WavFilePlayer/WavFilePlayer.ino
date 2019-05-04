@@ -56,11 +56,12 @@ void playFile(const char *filename)
 char filename[] = "x.wav";
 
 int counter=0;
+float volumefact=1.0;
 
 void loop() {
   int incomingByte;
 
-  float vol = analogRead(15);
+  float vol = (float)analogRead(15) * volumefact;
   vol = vol / 2200;
 
   counter=(counter+1)%500;
@@ -77,6 +78,9 @@ void loop() {
             if (monitorOutput) { Serial.write(incomingByte); break;}
             else {
               if (incomingByte=='0') { playWav1.stop(); break; }
+              if ((incomingByte>='1') && (incomingByte<='9'))
+                 volumefact=0.7;
+              else volumefact=1.0;
               filename[0]=incomingByte;
               if (playWav1.isPlaying()) {
                  playWav1.stop();
